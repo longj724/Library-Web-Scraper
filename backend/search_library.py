@@ -27,7 +27,7 @@ def check_availability_two(title):
     PATH = '/Users/justinlong/Documents/chromedriver'
     options = webdriver.ChromeOptions()
     options.add_argument('--incognito')
-    # options.add_argument('--headless')
+    options.add_argument('--headless')
     options.add_argument('--disable-extensions')
     options.add_argument('start-maximized')
     options.add_argument('disable-infobars')
@@ -52,11 +52,6 @@ def check_availability_two(title):
         for status, title in zip(statuses, titles):
             book_list[title.text] = status.text
 
-        for book in book_list:
-            print(book + ': ' + book_list[book])
-
         driver.quit()
 
         return book_list
-
-check_availability_two('Sapiens')
