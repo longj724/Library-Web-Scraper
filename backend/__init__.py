@@ -33,9 +33,14 @@ def create_app(test_config=None):
     @app.route('/search-book', methods=['POST'])
     def search_for_book():
         if request.method == 'POST':
-            if request.form['title']:
-                books = check_availability_two(request.form['title'])
-                return jsonify({'books': books})
+            title = request.get_json()
+            books = check_availability(title['book'])
+            
+            book_dict = {}
+            for i in range(len(books)):
+                book_dict[i] = books[i]
+            
+            return jsonify(books)
 
     @app.route('/my-books', methods=['GET'])
     def my_books():
@@ -54,15 +59,14 @@ def create_app(test_config=None):
 
     @app.route('/add-book', methods=['POST'])
     def add_book():
-
         from backend.my_books import get_db
 
         try:
             db = get_db()
-
             book = request.get_json()
+            print(book['book'])
 
-            db.execute('INSERT INTO books (title, author, kind, available) VALUES (:title, :author, :kind, :available)', book)
+            db.execute('INSERT INTO books (title, author, kind, available) VALUES (:title, :author, :kind, :available)', book['book'])
 
             db.commit()
             msg = 'Book added'
@@ -75,8 +79,7 @@ def create_app(test_config=None):
 
     return app
 
-def check_availability_two(title):
-
+def check_availability(title):
     PATH = '/Users/justinlong/Documents/chromedriver'
     options = webdriver.ChromeOptions()
     options.add_argument('--incognito')
@@ -91,20 +94,24 @@ def check_availability_two(title):
 
     driver.get('https://ccpl.overdrive.com/search?query=' + formatted_title)
 
-    statuses = 'statuses not found'
-    titles = 'titles not found'
-    book_list = {}
+    statuses = []
+    titles = []
+    authors = []
+    versions = []
+    book_list = []
 
     try :
-        element = WebDriverWait(driver, 10).until(
+        element = WebDriverWait(driver, 5).until(
             EC.presence_of_element_located((By.CLASS_NAME, 'title-header-bar'))
         )
         statuses = driver.find_elements_by_class_name('title-header-bar')
         titles = driver.find_elements_by_class_name('title-name')
+        authors = driver.find_elements_by_class_name('title-author')
+        versions = driver.find_elements_by_class_name('title-format-badge')
     finally:
-        for status, title in zip(statuses, titles):
-            book_list[title.text] = status.text
+        for i in range(len(titles)):
+            book = (titles[i].text, authors[i].text, versions[i].text, statuses[i].text)
+            book_list.append(book)
 
         driver.quit()
-
         return book_list
