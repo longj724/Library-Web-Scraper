@@ -158,11 +158,9 @@ def create_app(test_config=None):
         return 'abc'
     
     with app.app_context():
-        # get_statuses()
         sched = BackgroundScheduler(daemon=True)
-        sched.add_job(lambda: print('working'), 'cron', day_of_week='mon,wed,fri')
+        sched.add_job(lambda: get_statuses(), 'cron', day_of_week='mon,wed,fri')
         sched.start()
-        # send_text_message(['Sapiens', 'Cant Hurt Me', 'Thinking Fast and Slow'])
 
 
     return app
