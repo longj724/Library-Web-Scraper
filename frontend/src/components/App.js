@@ -5,71 +5,9 @@ import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
 import SearchIcon from '@material-ui/icons/Search';
 import AddIcon from '@material-ui/icons/Add';
+import RemoveIcon from '@material-ui/icons/Remove';
 import axios from 'axios';
-
-const useStyles = makeStyles((theme) => ({
-    root: {
-        backgroundColor: '#1D428A',
-        width: '100vw',
-        height: '100vh',
-        position: 'relative',
-        overflowY: 'auto',
-    },
-    form: {
-        position: 'absolute',
-        marginTop: '20vh',
-        marginLeft: '40vw',
-    },
-    textField: {
-        backgroundColor: '#fff',
-        width: '20vw',
-        borderRadius: '10px',
-        color: 'black',
-    },
-    searchIconButton: {
-        color: '#000',
-        backgroundColor: '#fff',
-        '&:hover': {
-            backgroundColor: '#FEC524',
-        },
-        marginLeft: '10px',
-    },
-    searchIcon: {
-        fontSize: 30,
-    },
-    bookDiv: {
-        width: '20vw',
-        height: '70vh',
-        marginTop: '30vh',
-        marginLeft: '40vw',
-        position: 'absolute',
-    },
-    listElement: {
-        color: '#fff',
-        marginBottom: '1vh',
-        marginTop: '1vh',
-    },
-    addIcon: {
-        fontSize: 10,
-    },
-    addIconButton: {
-        color: '#000',
-        backgroundColor: '#fff',
-        '&:hover': {
-            backgroundColor: '#FEC524',
-        },
-        marginLeft: '10px',
-        display: 'inline',
-        marginBottom: '1vh',
-    },
-    myBook: {
-        marginTop: '120px',
-        marginLeft: '45vw',
-        position: 'absolute',
-        backgroundColor: '#FEC524',
-        width: '10vw',
-    },
-}));
+import useStyles from '../CSS/styles';
 
 function App() {
     const classes = useStyles();
@@ -96,12 +34,40 @@ function App() {
             });
     };
 
-    const addBook = (event) => {
-        let bookIndex = parseInt(event.target.value);
+    const addBook = (e) => {
+        const bookIndex = parseInt(e.currentTarget.value);
+        console.log('Add book value is', e.currentTarget.value)
         axios
             .post('/add-book', { book: searchResults[bookIndex] })
             .then((res) => {
-                console.log(res);
+                if (res.data === 'Error in insert operation') {
+                    window.alert('Error: Book not added')
+                } else {
+                    console.log(res)
+                }
+            });
+    };
+
+    const deleteBook = (e) => {
+        const bookIndex = parseInt(e.currentTarget.value);
+        console.log(e.currentTarget.value)
+        console.log(bookIndex)
+        axios
+            .delete(
+                '/delete-book/' +
+                    myBooks[bookIndex]['title'] +
+                    '/' +
+                    myBooks[bookIndex]['author']
+            )
+            .then((res) => {
+                if (res.data === 'Error in deletion operation') {
+                    window.alert('Error: Book Not Deleted')
+                } else {
+                    const newBooks = myBooks.filter((book) => {
+                        return book['title'] != myBooks[bookIndex]['title']
+                    })
+                    setMyBooks(newBooks)
+                }
             });
     };
 
@@ -113,9 +79,7 @@ function App() {
                 return res.data;
             })
             .then((data) => {
-                data.length !== 0
-                    ? setMyBooks(data)
-                    : setMyBooks([0]);
+                data.length !== 0 ? setMyBooks(data) : setMyBooks([0]);
             });
     };
 
@@ -159,7 +123,7 @@ function App() {
                                 <IconButton
                                     value={index.toString()}
                                     className={classes.searchIconButton}
-                                    onClick={(e) => addBook(e)}
+                                    onClick={addBook}
                                 >
                                     <AddIcon className={classes.addIcon} />
                                 </IconButton>
@@ -182,6 +146,13 @@ function App() {
                                         ', Status: ' +
                                         book['status']}
                                 </li>
+                                <IconButton
+                                    value={index.toString()}
+                                    className={classes.searchIconButton}
+                                    onClick={deleteBook}
+                                >
+                                    <RemoveIcon className={classes.addIcon} />
+                                </IconButton>
                             </div>
                         );
                     })
