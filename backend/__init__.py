@@ -10,7 +10,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 def create_app(test_config=None):
     # create and configure the app
-    app = Flask(__name__, instance_relative_config=False)
+    app = Flask(__name__, instance_relative_config=False, static_folder='../frontend/build', static_url_path='/')
     app.config.from_mapping(
         DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite'),
     )
@@ -30,6 +30,10 @@ def create_app(test_config=None):
 
     from . import my_books
     my_books.init_app(app)
+
+    @app.route('/')
+    def index():
+        return app.send_static_file('index.html')
 
     @app.route('/search-book', methods=['POST'])
     def search_for_book():
