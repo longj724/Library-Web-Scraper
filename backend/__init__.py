@@ -10,9 +10,8 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 def create_app(test_config=None):
     # create and configure the app
-    app = Flask(__name__, instance_relative_config=True)
+    app = Flask(__name__, instance_relative_config=False)
     app.config.from_mapping(
-        SECRET_KEY='dev',
         DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite'),
     )
 
@@ -72,9 +71,26 @@ def create_app(test_config=None):
             db.commit()
             msg = 'Book added'
         except Exception as ex:
-            print(ex)
+            print('The exception is,', ex)
             db.rollback()
             msg = 'Error in insert operation'
+        finally:
+            return msg
+
+    @app.route('/delete-book/<title>/<author>', methods=['DELETE'])
+    def delete_book(title, author):
+        from backend.my_books import get_db
+        msg = ''
+        try:
+            db = get_db()
+
+            db.execute('DELETE FROM books WHERE title=?', (title,))
+            db.commit()
+            msg = 'Book deleted'
+        except Exception as ex:
+            print(ex)
+            db.rollback()
+            msg = 'Error in deletion operation'
         finally:
             return msg
 
@@ -100,6 +116,7 @@ def create_app(test_config=None):
         titles = []
         authors = []
         versions = []
+        updated_books = []
 
         for book in db_titles:
             driver.get('https://ccpl.overdrive.com/search?query=' + book[1])
@@ -117,14 +134,35 @@ def create_app(test_config=None):
                     if statuses[i].text != book[4]:
                         db.execute('UPDATE books SET available=? WHERE title=?', (statuses[i].text, book[1]))
                         db.commit()
+                        updated_books.append(book[1])
+            
+            if len(updated_books) != 0:
+                send_text_message(updated_books)
             
             driver.quit()
+    
+    def send_text_message(updated_books):
+        account_sid = app.config.get('TWILIO_ACCOUNT_SID')
+        auth_token = app.config.get('TWILIO_AUTH_TOKEN')
+        client = Client(account_sid, auth_token)
+
+        message_body = 'The availability of the following books has changed: \n'
+        message_body += '\n'.join(updated_books)
+        
+        message = client.messages \
+                        .create(
+                            body=message_body,
+                            from_='+13477634662',
+                            to='+14407999718'
+                        )
+        return 'abc'
     
     with app.app_context():
         # get_statuses()
         sched = BackgroundScheduler(daemon=True)
         sched.add_job(lambda: print('working'), 'cron', day_of_week='mon,wed,fri')
         sched.start()
+        # send_text_message(['Sapiens', 'Cant Hurt Me', 'Thinking Fast and Slow'])
 
 
     return app
