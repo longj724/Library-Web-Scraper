@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { makeStyles } from '@material-ui/core/styles';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
@@ -64,7 +63,7 @@ function App() {
                     window.alert('Error: Book Not Deleted')
                 } else {
                     const newBooks = myBooks.filter((book) => {
-                        return book['title'] != myBooks[bookIndex]['title']
+                        return book['title'] !== myBooks[bookIndex]['title']
                     })
                     setMyBooks(newBooks)
                 }
