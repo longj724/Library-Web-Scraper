@@ -31,7 +31,7 @@ pycparser==2.20
 PyDispatcher==2.0.5
 pyee==7.0.2
 PyHamcrest==2.0.2
-PyJWT==1.7.1
+PyJWT==2.4.0
 pyOpenSSL==19.1.0
 pyppeteer==0.2.2
 pyquery==1.4.1
